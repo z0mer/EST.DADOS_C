@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define tam_hash 11
+#define tam_hash 11 // Tamanho da tabela de espalhamento
 
 typedef struct Celula {
     int valor;
@@ -9,145 +9,103 @@ typedef struct Celula {
 } Celula;
 
 typedef struct Lista {
-    int qtde;
-    Celula *primeiro;
+    int qtde; // Quantidade de elementos na lista
+    Celula *primeiro; // Ponteiro para o primeiro elemento da lista
 } Lista;
 
 typedef struct Hash {
-    Lista* tabela[tam_hash];
+    Lista *tabela[tam_hash]; // Array de listas para a tabela de espalhamento
 } Hash;
 
-Hash* start_hash() {
-    Hash* hash = (Hash*)malloc(sizeof(Hash));
-    for(int i = 0; i < tam_hash; i++) {
-        hash->tabela[i] = (Lista*)malloc(sizeof(Lista));
-        hash->tabela[i]->primeiro = NULL;
-        hash->tabela[i]->qtde = 0;
+// Função para inicializar a tabela de espalhamento
+Hash *start_hash() {
+    Hash *hash = (Hash *) malloc(sizeof(Hash)); // Aloca memória para a estrutura Hash
+    for (int i = 0; i < tam_hash; i++) {
+        hash->tabela[i] = (Lista *) malloc(sizeof(Lista)); // Aloca memória para cada lista na tabela
+        hash->tabela[i]->primeiro = NULL; // Inicializa o ponteiro para o primeiro elemento como NULL
+        hash->tabela[i]->qtde = 0; // Inicializa a quantidade de elementos como 0
     }
-    return hash;
+    return hash; // Retorna a tabela de espalhamento inicializada
 }
 
+// Função de espalhamento usando o método da divisão
 int hashing(int valor) {
-    return valor % tam_hash;
+    return valor % tam_hash; // Retorna o valor módulo o tamanho da tabela
 }
 
+// Função para inserir um valor na lista encadeada
 void inserir_lista(Lista *l, int valor) {
-    Celula *novo = (Celula*)malloc(sizeof(Celula));
-    novo->valor = valor;
-    novo->proximo = NULL;
+    Celula *novo = (Celula *) malloc(sizeof(Celula)); // Aloca memória para o novo elemento
+    novo->valor = valor; // Define o valor do novo elemento
+    novo->proximo = l->primeiro; // O próximo do novo elemento aponta para o antigo primeiro elemento
+    l->primeiro = novo; // Atualiza o primeiro elemento da lista para ser o novo elemento
+    l->qtde++; // Incrementa a quantidade de elementos na lista
+}
 
-    if(l->primeiro == NULL) {
-        l->primeiro = novo;
-    } else {
-        Celula *atual = l->primeiro;
-        Celula *anterior = NULL;
-        while(atual != NULL && atual->valor <= valor) {
-            anterior = atual;
-            atual = atual->proximo;
-        }
-        if(anterior == NULL) {
-            novo->proximo = l->primeiro;
-            l->primeiro = novo;
-        } else {
-            if(atual == NULL) {
-                anterior->proximo = novo;
-            } else {
-                novo->proximo = atual;
-                anterior->proximo = novo;
-            }
-        }
+// Função para inserir um valor na tabela de espalhamento
+void inserir_hash(Hash *hash, int valor) {
+    int indice = hashing(valor); // Calcula o índice usando a função de espalhamento
+    inserir_lista(hash->tabela[indice], valor); // Insere o valor na lista correspondente ao índice
+}
+
+// Função para remover um valor da tabela de espalhamento
+void remover_hash(Hash *hash, int valor) {
+    int indice = hashing(valor); // Calcula o índice usando a função de espalhamento
+    Celula *atual = hash->tabela[indice]->primeiro; // Ponteiro para o primeiro elemento da lista correspondente
+    Celula *anterior = NULL; // Ponteiro para o elemento anterior ao elemento atual
+
+    // Percorre a lista até encontrar o elemento a ser removido ou o final da lista
+    while (atual != NULL && atual->valor != valor) {
+        anterior = atual; // Atualiza o ponteiro para o elemento anterior
+        atual = atual->proximo; // Move para o próximo elemento
     }
-    l->qtde++;
+
+    // Se o elemento não foi encontrado, retorna
+    if (atual == NULL)
+        return;
+
+    // Se o elemento é o primeiro da lista
+    if (anterior == NULL)
+        hash->tabela[indice]->primeiro = atual->proximo;
+    else
+        anterior->proximo = atual->proximo; // Atualiza o próximo do elemento anterior para pular o elemento atual
+
+    free(atual); // Libera a memória do elemento removido
+    hash->tabela[indice]->qtde--; // Decrementa a quantidade de elementos na lista
 }
 
-void inserir_hash(Hash* hash, int valor) {
-    int indice = hashing(valor);
-    inserir_lista(hash->tabela[indice], valor);
-}
-
-void remover_lista(Lista *l, int valor) {
-    Celula *atual = l->primeiro;
-    Celula *anterior = NULL;
-
-    while(atual != NULL && atual->valor != valor) {
-        anterior = atual;
-        atual = atual->proximo;
-    }
-    if(atual != NULL) {
-        if(anterior == NULL) {
-            l->primeiro = atual->proximo;
-        } else {
-            anterior->proximo = atual->proximo;
-        }
-        free(atual);
-        l->qtde--;
-    }
-}
-
-void remover_hash(Hash* hash, int valor) {
-    int indice = hashing(valor);
-    remover_lista(hash->tabela[indice], valor);
-}
-
-void imprimir(Hash* hash) {
+// Função para imprimir a tabela de espalhamento
+void imprimir(Hash *hash) {
     printf("---------------------\n");
-    for(int i = 0; i < tam_hash; i++) {
-        printf("%d -> ", i);
-        Celula* atual = hash->tabela[i]->primeiro;
-        while(atual != NULL) {
-            printf("%d ", atual->valor);
-            atual = atual->proximo;
+    for (int i = 0; i < tam_hash; i++) {
+        printf("%d -> ", i); // Imprime o índice atual
+        Celula *atual = hash->tabela[i]->primeiro; // Ponteiro para o primeiro elemento da lista atual
+        while (atual != NULL) {
+            printf("%d ", atual->valor); // Imprime o valor do elemento atual
+            atual = atual->proximo; // Move para o próximo elemento
         }
-        printf("\n");
+        printf("\n"); // Imprime uma nova linha ao final de cada lista
     }
     printf("---------------------\n");
 }
 
-void preencher_lista(Lista *lista, int valores[]) {
-    for(int i = 0; valores[i] != 0; i++) {
-        inserir_lista(lista, valores[i]);
-    }
-}
-
+// Função principal
 int main(void) {
-    Lista* lista = (Lista*)malloc(sizeof(Lista));
-    lista->primeiro = NULL;
-    lista->qtde = 0;
-
-    int valores_primeiro[] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 0};
-    preencher_lista(lista, valores_primeiro);
-
-    Hash* hash = start_hash();
-    for(int i = 0; i < tam_hash; i++) {
-        hash->tabela[i]->primeiro = NULL;
-        hash->tabela[i]->qtde = 0;
+    Hash *hash = start_hash(); // Inicializa a tabela de espalhamento
+    int valor;
+    while (1) {
+        scanf("%d", &valor); // Lê um valor do usuário
+        if (valor == 0)
+            break; // Se o valor for 0, encerra o loop
+        inserir_hash(hash, valor); // Insere o valor na tabela de espalhamento
     }
-
-    for(int i = 0; valores_primeiro[i] != 0; i++) {
-        inserir_hash(hash, valores_primeiro[i]);
+    imprimir(hash); // Imprime a tabela de espalhamento após a inserção dos valores
+    while (1) {
+        scanf("%d", &valor); // Lê um valor do usuário
+        if (valor == 0)
+            break; // Se o valor for 0, encerra o loop
+        remover_hash(hash, valor); // Remove o valor da tabela de espalhamento
     }
-
-    imprimir(hash);
-
-    // Segundo conjunto de entrada
-    Lista* nova_lista = (Lista*)malloc(sizeof(Lista));
-    nova_lista->primeiro = NULL;
-    nova_lista->qtde = 0;
-
-    int valores_segundo[] = {12, 13, 14, 15, 16, 17, 0};
-    preencher_lista(nova_lista, valores_segundo);
-
-    Hash* nova_hash = start_hash();
-    for(int i = 0; i < tam_hash; i++) {
-        nova_hash->tabela[i]->primeiro = NULL;
-        nova_hash->tabela[i]->qtde = 0;
-    }
-
-    for(int i = 0; valores_segundo[i] != 0; i++) {
-        inserir_hash(nova_hash, valores_segundo[i]);
-    }
-
-    imprimir(nova_hash);
-
-    return 0;
+    imprimir(hash); // Imprime a tabela de espalhamento após a remoção dos valores
+    return 0; // Retorna 0 para indicar que o programa foi executado com sucesso
 }
