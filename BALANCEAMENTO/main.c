@@ -14,7 +14,7 @@ typedef struct Arvore {
 } Arvore;
 
 void RotacaoEsquerda(Arvore *arvore, Vertice *x) {
-  printf("Esquerda em%d\n", x->valor);
+  printf("Esquerda em %d\n", x->valor);
   Vertice *pai = x->pai;
   Vertice *y = x->dir;
   Vertice *b = y->esq;
@@ -37,7 +37,7 @@ void RotacaoEsquerda(Arvore *arvore, Vertice *x) {
 }
 
 void RotacaoDireita(Arvore *arvore, Vertice *y) {
-  printf("Direita em%d\n", y->valor);
+  printf("Direita em %d\n", y->valor);
   Vertice *pai = y->pai;
   Vertice *x = y->esq;
   Vertice *b = x->dir;
@@ -52,8 +52,8 @@ void RotacaoDireita(Arvore *arvore, Vertice *y) {
   }
   x->pai = pai;
   y->pai = x;
-  x->esq = y;
-  y->dir = b;
+  x->dir = y;
+  y->esq = b;
   if (b != NULL) {
     b->pai = y;
   }
@@ -76,7 +76,43 @@ int altura(Vertice *x) {
 int fatorBalanceamento(Vertice *x) { return altura(x->dir) - altura(x->esq); }
 
 void balanceie(Arvore *arvore, Vertice *x) {
-  
+  int fb = fatorBalanceamento(x);
+  int filhoe, filhod;
+
+  if (fb > 1) {
+
+    filhoe = fatorBalanceamento(x->dir);
+
+    if (filhoe >= 0) {
+      RotacaoEsquerda(arvore, x);
+    } else {
+      RotacaoDireita(arvore, x->dir);
+      RotacaoEsquerda(arvore, x);
+    }
+  } else if (fatorBalanceamento(x) < -1) {
+    filhoe = (x->esq != NULL) ? (fatorBalanceamento(x->esq)) : 0;
+
+    if (fatorBalanceamento(x->esq) <= 0) {
+      RotacaoDireita(arvore, x);
+    } else {
+      filhoe = (x->esq != NULL) ? fatorBalanceamento(x->esq) : 0;
+      filhod = (x->dir != NULL) ? fatorBalanceamento(x->dir) : 0;
+      if (filhoe > filhod) {
+        RotacaoEsquerda(arvore, x->esq);
+      } else {
+        
+        RotacaoDireita(arvore, x->dir);
+
+      }
+      if (filhoe >= filhod && filhoe >= 0) {
+        RotacaoDireita(arvore, x);
+      } else {
+        RotacaoEsquerda(arvore, x->dir);
+
+        RotacaoDireita(arvore, x);
+      }
+    }
+  }
 }
 
 int insere(Arvore *arvore, int valor) {
@@ -169,18 +205,18 @@ int remover(Arvore *arvore, Vertice *x) {
 
 int buscar_e_remover(Arvore *arvore, int valor) {
   Vertice *atual = arvore->raiz;
-    while (atual != NULL) {
-      if (valor < atual->valor) {
+  while (atual != NULL) {
+    if (atual->valor == valor) {
+      return remover(arvore, atual);
+    } else {
+      if (valor <= atual->valor) {
         atual = atual->esq;
-      } else if (valor > atual->valor) {
+      } else {
         atual = atual->dir;
-      } else { 
-        remover(arvore, atual);
-        return atual;
       }
     }
-    return NULL; 
   }
+  return 0;
 }
 
 int getValor(Arvore *arvore) { return arvore->qtde; }
