@@ -76,41 +76,20 @@ int altura(Vertice *x) {
 int fatorBalanceamento(Vertice *x) { return altura(x->dir) - altura(x->esq); }
 
 void balanceie(Arvore *arvore, Vertice *x) {
-  int fb = fatorBalanceamento(x);
-  int filhoe, filhod;
-
-  if (fb > 1) {
-
-    filhoe = fatorBalanceamento(x->dir);
-
-    if (filhoe >= 0) {
+  int fator = fatorBalanceamento(x);
+  if (fator >= 2) {
+    if (fatorBalanceamento(x->dir) >= 0) {
       RotacaoEsquerda(arvore, x);
     } else {
       RotacaoDireita(arvore, x->dir);
       RotacaoEsquerda(arvore, x);
     }
-  } else if (fatorBalanceamento(x) < -1) {
-    filhoe = (x->esq != NULL) ? (fatorBalanceamento(x->esq)) : 0;
-
+  } else if (fator <= -2) {
     if (fatorBalanceamento(x->esq) <= 0) {
       RotacaoDireita(arvore, x);
     } else {
-      filhoe = (x->esq != NULL) ? fatorBalanceamento(x->esq) : 0;
-      filhod = (x->dir != NULL) ? fatorBalanceamento(x->dir) : 0;
-      if (filhoe > filhod) {
-        RotacaoEsquerda(arvore, x->esq);
-      } else {
-        
-        RotacaoDireita(arvore, x->dir);
-
-      }
-      if (filhoe >= filhod && filhoe >= 0) {
-        RotacaoDireita(arvore, x);
-      } else {
-        RotacaoEsquerda(arvore, x->dir);
-
-        RotacaoDireita(arvore, x);
-      }
+      RotacaoEsquerda(arvore, x->esq);
+      RotacaoDireita(arvore, x);
     }
   }
 }
@@ -209,12 +188,12 @@ int buscar_e_remover(Arvore *arvore, int valor) {
     if (atual->valor == valor) {
       return remover(arvore, atual);
     } else {
-      if (valor <= atual->valor) {
+      if(valor <= atual->valor){
         atual = atual->esq;
-      } else {
+      } else{
         atual = atual->dir;
       }
-    }
+    } 
   }
   return 0;
 }
